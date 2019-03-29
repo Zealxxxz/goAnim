@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible"
+            content="ie=edge">
+        <title>Document</title>
+        <style>
+            #a1 {
+                width: 100px;
+                height: 100px;
+                top: 200px;
+                left: 0;
+                background: red;
+                position: absolute;
+            }
+
+            #a2 {
+                width: 100px;
+                height: 100px;
+                top: 0;
+                left: 0;
+                background: blue;
+                position: absolute;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="a1"></div>
+        <div id="a2"></div>
+        <script>
+            (function () { var b = 0; var c = ["webkit", "moz"]; for (var a = 0; a < c.length && !window.requestAnimationFrame; ++a) { window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"]; window.cancelAnimationFrame = window[c[a] + "CancelAnimationFrame"] || window[c[a] + "CancelRequestAnimationFrame"] } if (!window.requestAnimationFrame) { window.requestAnimationFrame = function (h, e) { var d = new Date().getTime(); var f = Math.max(0, 16 - (d - b)); var g = window.setTimeout(function () { h(d + f) }, f); b = d + f; return g } } if (!window.cancelAnimationFrame) { window.cancelAnimationFrame = function (d) { clearTimeout(d) } } }());  
+        </script>
+        <script>
+            function goAnim(arr, cb) {
+                !Array.isArray(arr) && (arr = [arr]);
+
+                var animCount = 0;
+                for (var i = 0; i < arr.length; i++) {
+                    for (var j = 0; j < arr[i].anim.length; j++) {
+                        arr[i].anim[j].initData = initData(arr[i].anim[j]);
+                    }
+                }
+
+                this.timer && cancelAnimationFrame(this.timer);
+                var timeStart = + new Date(); // 起始时间
+                var _this = this;
+                (function animate() {
+                    var timeCount = (+ new Date()) - timeStart;
+                    if (animCount > 0) {
+                        for (var i = 0; i < arr.length; i++) {
+                            setCss(arr[i], timeCount);
+                        }
+                        _this.timer = requestAnimationFrame(animate);
+                    }
+                    else {
+                        cancelAnimationFrame(_this.timer);
+                        cb && cb();
+                    }
+                })();
+
+                function initData(obj) {
+                    var reg = /[\d\.]+/g;
+                    var numArrFrom = obj.from.match(reg);
+                    var numArrTo = obj.to.match(reg);
+
+                    if (!numArrFrom || !numArrTo || numArrFrom.length == 0 || numArrTo.length == 0 || numArrFrom.length != numArrTo.length) {
+                        console.warn('数据输入错误');
+                    }
+
+                    for (var i = 0; i < numArrFrom.length; i++) {
+                        numArrFrom[i] = parseFloat(numArrFrom[i]);
+                        numArrTo[i] = parseFloat(numArrTo[i]);
+                    }
+
+                    var strArr = obj.from.split(reg);
+                    if (numArrFrom.length <= 0) { return; };
+                    animCount++;
+                    return {
+                        strArr: strArr,
+                        numArrFrom: numArrFrom,
+                        numArrTo: numArrTo,
+                        totalLength: strArr.length + numArrFrom.length,
+                        isEnd: false,
+                    }
+                }
+
+                function setCss(obj, timeCount) {
+                    var styleStr = '';
+                    var tempCount = animCount;
+                    for (var i = 0; i < obj.anim.length; i++) {
+                        var target = obj.anim[i];
+                        if (timeCount > target.start && !target.isEnd) {
+                            var percent = (timeCount - target.start) / (target.end - target.start);
+                            if (percent >= 1) {
+                                percent = 1;
+                                target.isEnd = true;
+                                tempCount--;
+                            }
+                            styleStr += getValue(percent);
+                        }
+                    }
+
+                    obj.dom.style.cssText += ';' + styleStr;
+                    animCount = tempCount;
+
+                    function getValue(percent) {
+                        var numFrom = target.initData.numArrFrom;
+                        var numTo = target.initData.numArrTo;
+                        var arr = [];
+                        for (var i = 0; i < numFrom.length; i++) {
+                            arr.push(numFrom[i] + (numTo[i] - numFrom[i]) * percent);
+                        }
+
+                        var numIndex = 0;
+                        var strIndex = 0;
+                        var turnForNum = false;
+                        var str = target.style + ':';
+                        for (var i = 0; i < target.initData.totalLength; i++) {
+                            if (turnForNum) {
+                                str += arr[numIndex];
+                                numIndex++;
+                                turnForNum = false;
+                            }
+                            else {
+                                str += target.initData.strArr[strIndex];
+                                strIndex++;
+                                turnForNum = true;
+                            }
+                        }
+
+                        return str + ';';
+                    }
+                }
+            }        
+        </script>
+        <script>
+            var anim = [
+                {//动画对象，可以多个
+                    dom: document.getElementById('a1'), //dom对象
+                    anim: [//动画数组，里面可为多个对象
+                        {
+                            style: 'height',//要改变的样式名称如width,height
+                            from: '10rem',//样式的起始值要和to保持一致
+                            to: '20rem',//样式的目标值要和from保持一致
+                            start: 0,//开始时间 毫秒
+                            end: 100, //结束时间 毫秒
+                        },
+                        {
+                            style: 'width',
+                            from: '10rem',
+                            to: '20rem',
+                            start: 100,
+                            end: 200,
+                        }
+                    ]
+                },
+                {
+                    dom: document.getElementById('a2'),
+                    anim: [
+                        {
+                            style: 'background',
+                            from: 'rgba(0.0, 0.0, 0.0, 1)',
+                            to: 'rgba(255, 0, 100, 0.5)',
+                            start: 0,
+                            end: 3000,
+                        }
+                    ]
+                },
+                {
+                    dom: document.getElementById('a1'),
+                    anim: [
+                        {
+                            style: 'transform',
+                            from: 'rotate(20deg)',
+                            to: 'rotate(40deg)',
+                            start: 0,
+                            end: 2000,
+                        }
+                    ]
+                },
+            ];
+            goAnim(anim, function () {
+                alert('msg');
+            });             
+        </script>
+    </body>
+
+</html>
