@@ -94,11 +94,11 @@
                     var tempCount = animCount;
                     for (var i = 0; i < obj.anim.length; i++) {
                         var target = obj.anim[i];
-                        if (timeCount > target.start && !target.isEnd) {
+                        if (timeCount > target.start && !target.initData.isEnd) {
                             var percent = (timeCount - target.start) / (target.end - target.start);
                             if (percent >= 1) {
                                 percent = 1;
-                                target.isEnd = true;
+                                target.initData.isEnd = true;
                                 tempCount--;
                             }
                             styleStr += getValue(percent);
